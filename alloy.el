@@ -3,7 +3,7 @@
 ;; Author: Fox Kiester <noct@posteo.net>
 ;; URL: https://github.com/noctuid/alloy.el
 ;; Created: February 17, 2016
-;; Keywords: vim, evil, leader, keybindings, keys
+;; Keywords: vim, aiern, leader, keybindings, keys
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.5"))
 ;; Version: 0.1
 
@@ -26,15 +26,16 @@
 ;; This package provides convenient wrappers for more succinctly defining
 ;; keybindings. It allows defining multiple keys at once, specifying an
 ;; arbitrary number of named prefix keys to be used in key definitions,
-;; implicitly wrapping key strings with (kbd ...), and more. It provides a
-;; single function for standard Emacs key definitions as well as evil key
-;; definitions for any evil state and any keymap. It also provides a setup
-;; function to generate "nmap", "vmap", etc. keybinding functions for evil.
+;; implicitly wrapping key strings with (naked ...), and more. It provides a
+;; single function for standard Emacs key definitions as well as aiern key
+;; definitions for any aiern state and any keymap. It also provides a setup
+;; function to generate "nmap", "vmap", etc. keybinding functions for aiern.
 
 ;; For more information see the README in the online repository.
 
 ;;; Code:
 (require 'cl-lib)
+(require 'naked)
 
 ;; * Settings
 (defgroup alloy nil
@@ -42,12 +43,12 @@
   :group 'convenience
   :prefix "alloy-")
 
-(defcustom alloy-implicit-kbd t
-  "Whether to implicitly wrap a (kbd) around `alloy-define-key' keys.
+(defcustom alloy-implicit-naked t
+  "Whether to implicitly wrap a (naked) around `alloy-define-key' keys.
 This applies to the prefix key as well. This option is provided to make it easy
   to transition from other key definers to `alloy-define-key'. It does not
   apply to other helpers such as `alloy-key', `alloy-key-dispatch', and
-  `alloy-translate-key'. These will always use `kbd' on keys that are
+  `alloy-translate-key'. These will always use `naked' on keys that are
   strings."
   :group 'alloy
   :type 'boolean)
@@ -62,9 +63,9 @@ This applies to the prefix key as well. This option is provided to make it easy
 
 (defcustom alloy-default-non-normal-prefix nil
   "The default prefix key sequence to use for the 'emacs and 'insert states.
-Note that this setting is only useful for evil-users and will only have an
+Note that this setting is only useful for aiern-users and will only have an
 effect when binding keys in the 'emacs and/or 'insert states or in the
-'evil-insert-state-map and/or 'evil-emacs-state-map keymaps. When this is not
+'aiern-insert-state-map and/or 'aiern-emacs-state-map keymaps. When this is not
 specified, `alloy-default-prefix' will be the default prefix for any states
 and keymaps. If this is specified `alloy-default-prefix' or the arg to :prefix
 will not be used when binding keys in the insert and Emacs states."
@@ -75,8 +76,8 @@ will not be used when binding keys in the insert and Emacs states."
                         "2018-01-21")
 
 (defcustom alloy-default-global-prefix nil
-  "The default prefix key sequence to use for all evil states.
-This setting is only useful for evil users. Note that like with
+  "The default prefix key sequence to use for all aiern states.
+This setting is only useful for aiern users. Note that like with
 `alloy-default-non-normal-prefix', if this or :global-prefix is specified,
 `alloy-default-prefix' or the arg to :prefix will not be used for binding
 keys in the insert and emacs states. If you don't need a different or extra
@@ -89,7 +90,7 @@ just use `alloy-default-prefix'/:prefix by itself."
                         "2018-01-21")
 
 (define-widget 'alloy-state 'lazy
-  "Alloy's evil state type."
+  "Alloy's aiern state type."
   :type '(choice
           (const :tag "Insert state" insert)
           (const :tag "Emacs state" emacs)
@@ -98,13 +99,13 @@ just use `alloy-default-prefix'/:prefix by itself."
           (const :tag "Motion state" motion)
           (const :tag "Operator state" operator)
           (const :tag "Replace state" replace)
-          (const :tag "Use define-key not evil-define-key" nil)
+          (const :tag "Use define-key not aiern-define-key" nil)
           ;; other packages define states
           symbol))
 
 (defcustom alloy-default-states nil
-  "The default evil state(s) to make mappings in.
-Non-evil users should keep this nil."
+  "The default aiern state(s) to make mappings in.
+Non-aiern users should keep this nil."
   :group 'alloy
   :type '(choice alloy-state
                  (set alloy-state)))
@@ -113,9 +114,9 @@ Non-evil users should keep this nil."
                         "2018-01-21")
 
 (defcustom alloy-non-normal-states '(insert emacs hybrid iedit-insert)
-  "List of \"non-normal\" evil states (used with :non-normal-prefix). When
+  "List of \"non-normal\" aiern states (used with :non-normal-prefix). When
   :states is not specified (only :keymaps), these will automatically be expanded
-  to their full global evil keymap equivalents."
+  to their full global aiern keymap equivalents."
   :group 'alloy
   :type '(repeat alloy-state))
 
@@ -164,16 +165,16 @@ This is an alist of a state to keybindings.")
 
 (defcustom alloy-keymap-aliases
   '((override . alloy-override-mode-map)
-    ((i insert) . evil-insert-state-map)
-    ((e emacs) . evil-emacs-state-map)
-    ((h hybrid) . evil-hybrid-state-map)
-    ((n normal) . evil-normal-state-map)
-    ((v visual) . evil-visual-state-map)
-    ((m motion) . evil-motion-state-map)
-    ((o operator) . evil-operator-state-map)
-    ((r replace) . evil-replace-state-map)
-    ((in inner) . evil-inner-text-objects-map)
-    ((out outer) . evil-outer-text-objects-map))
+    ((i insert) . aiern-insert-state-map)
+    ((e emacs) . aiern-emacs-state-map)
+    ((h hybrid) . aiern-hybrid-state-map)
+    ((n normal) . aiern-normal-state-map)
+    ((v visual) . aiern-visual-state-map)
+    ((m motion) . aiern-motion-state-map)
+    ((o operator) . aiern-operator-state-map)
+    ((r replace) . aiern-replace-state-map)
+    ((in inner) . aiern-inner-text-objects-map)
+    ((out outer) . aiern-outer-text-objects-map))
   "An alist for mapping short keymap names to their full names.
 Earlier entries have higher precedence."
   :group 'alloy
@@ -200,7 +201,7 @@ Earlier entries have higher precedence."
   :type '(choice function (const nil)))
 
 (defcustom alloy-describe-state-sort-function
-  #'alloy--sort-evil-state-conses
+  #'alloy--sort-aiern-state-conses
   "Function used to sort the states conses for `alloy-describe-keybindings'."
   :group 'alloy
   :type '(choice function (const nil)))
@@ -214,20 +215,20 @@ Earlier entries have higher precedence."
 (defcustom alloy-describe-priority-keymaps
   '(local
     global
-    evil-insert-state-map
-    evil-emacs-state-map
-    evil-hybrid-state-map
-    evil-normal-state-map
-    evil-visual-state-map
-    evil-motion-state-map
-    evil-operator-state-map
-    evil-replace-state-map
-    evil-inner-text-objects-map
-    evil-outer-text-objects-map
-    evil-ex-search-keymap
-    evil-ex-completion-map
-    evil-command-window-mode-map
-    evil-window-map)
+    aiern-insert-state-map
+    aiern-emacs-state-map
+    aiern-hybrid-state-map
+    aiern-normal-state-map
+    aiern-visual-state-map
+    aiern-motion-state-map
+    aiern-operator-state-map
+    aiern-replace-state-map
+    aiern-inner-text-objects-map
+    aiern-outer-text-objects-map
+    aiern-ex-search-keymap
+    aiern-ex-completion-map
+    aiern-command-window-mode-map
+    aiern-window-map)
   "Keymaps to print first for `alloy-describe-keybindings'."
   :group 'alloy
   :type '(repeat sybmol))
@@ -255,8 +256,8 @@ If non-nil, enable `alloy-override-mode' when binding a key in
 
 (defvar alloy-override-mode-map (make-sparse-keymap)
   "A keymap that will take priority over other minor mode keymaps.
-This is only for non-evil keybindings (it won't override keys bound with
-`evil-define-key'.")
+This is only for non-aiern keybindings (it won't override keys bound with
+`aiern-define-key'.")
 
 (define-minor-mode alloy-override-mode
   "A global minor mode used for key definitions that should override others."
@@ -268,7 +269,7 @@ This is only for non-evil keybindings (it won't override keys bound with
 (defvar-local alloy-override-local-mode-map nil
   "A keymap that will take priority over other minor mode keymaps.
 This keymap is buffer-local and will take precedence over
-`alloy-override-mode-map'. Alloy uses this keymap when creating non-evil
+`alloy-override-mode-map'. Alloy uses this keymap when creating non-aiern
 local keybindings.")
 (put 'alloy-override-local-mode-map 'permanent-local t)
 
@@ -287,17 +288,17 @@ local keybindings.")
   "Whether `alloy-maps-alist' has been set correctly for the current buffer.")
 (put 'alloy-maps-alist 'permanent-local t)
 
-(declare-function evil-make-intercept-map "evil-core")
+(declare-function aiern-make-intercept-map "aiern-core")
 (defun alloy-override-make-intercept-maps (_sym states)
   "Make intercept keymaps for STATES in `alloy-override-mode-map'.
 This means that keys bound in STATES for `alloy-override-mode-map' will take
-precedence over keys bound in other evil auxiliary maps."
+precedence over keys bound in other aiern auxiliary maps."
   ;; can't use `alloy-with-eval-after-load' here; not available
-  (with-eval-after-load 'evil
-    ;; TODO eventually use new evil-make-intercept-map arg
+  (with-eval-after-load 'aiern
+    ;; TODO eventually use new aiern-make-intercept-map arg
     (dolist (state states)
-      (evil-make-intercept-map
-       (evil-get-auxiliary-keymap alloy-override-mode-map state t t)
+      (aiern-make-intercept-map
+       (aiern-get-auxiliary-keymap alloy-override-mode-map state t t)
        state))))
 
 (defcustom alloy-override-states
@@ -372,24 +373,24 @@ If STATEP is non-nil, check `alloy-state-aliases' instead of
 
 ;; don't want to reuse `alloy--unalias' since the user can alter
 ;; `alloy-keymap-aliases'
-(defun alloy--evil-keymap-for-state (state)
-  "Return a symbol corresponding to the global evil keymap for STATE."
-  (intern (concat "evil-" (symbol-name state) "-state-map")))
+(defun alloy--aiern-keymap-for-state (state)
+  "Return a symbol corresponding to the global aiern keymap for STATE."
+  (intern (concat "aiern-" (symbol-name state) "-state-map")))
 
-(defun alloy--kbd (key)
-  "Use `kbd' on KEY when it is a string."
+(defun alloy--naked (key)
+  "Use `naked' on KEY when it is a string."
   (if (stringp key)
-      (kbd key)
+      (naked key)
     key))
 
 ;; TODO refactor to be more straightforward
 (defun alloy--concat (nokbd &rest keys)
   "Concatenate the strings in KEYS.
-If `alloy-implicit-kbd' is non-nil, interleave the strings in KEYS with
-spaces; unless NOKBD is non-nil, apply (kbd ...) to the result. If
-`alloy-implicit-kbd' is nil, just concatenate the keys."
+If `alloy-implicit-naked' is non-nil, interleave the strings in KEYS with
+spaces; unless NOKBD is non-nil, apply (naked ...) to the result. If
+`alloy-implicit-naked' is nil, just concatenate the keys."
   (setq keys (remove nil keys))
-  (if alloy-implicit-kbd
+  (if alloy-implicit-naked
       (let ((keys (mapconcat (lambda (x)
                                (if (vectorp x)
                                    (key-description x)
@@ -397,12 +398,12 @@ spaces; unless NOKBD is non-nil, apply (kbd ...) to the result. If
                              keys " ")))
         (if nokbd
             keys
-          (kbd keys)))
+          (naked keys)))
     (apply #'concat keys)))
 
-(defun alloy--apply-prefix-and-kbd (prefix maps)
+(defun alloy--apply-prefix-and-naked (prefix maps)
   "Prepend the PREFIX sequence to all the keys that are strings in MAPS.
-Also apply (kbd ...) to key and definition strings if `alloy-implicit-kbd' is
+Also apply (naked ...) to key and definition strings if `alloy-implicit-naked' is
 non-nil."
   (setq prefix (or prefix ""))
   (cl-loop for (key def) on maps by 'cddr
@@ -421,12 +422,12 @@ non-nil."
 
 (defun alloy--record-keybindings (keymap state maps &optional minor-mode-p)
   "For KEYMAP and STATE, add MAPS to `alloy-keybindings'.
-If KEYMAP is \"local\", add MAPS to `alloy-local-keybindings.' For non-evil
+If KEYMAP is \"local\", add MAPS to `alloy-local-keybindings.' For non-aiern
 keybindings, STATE will be nil. Duplicate keys will be replaced with the new
 ones. MINOR-MODE-P should be non-nil when keymap corresponds to a minor-mode
-name (as used with `evil-define-minor-mode-key') as opposed to a keymap name."
-  (if (and state (not (featurep 'evil)))
-      (alloy-with-eval-after-load 'evil
+name (as used with `aiern-define-minor-mode-key') as opposed to a keymap name."
+  (if (and state (not (featurep 'aiern)))
+      (alloy-with-eval-after-load 'aiern
         (alloy--record-keybindings keymap state maps minor-mode-p))
     (let* (keys
            (maps (cl-loop
@@ -471,14 +472,14 @@ name (as used with `evil-define-minor-mode-key') as opposed to a keymap name."
                                              :key #'car
                                              :test #'equal))))))))
 
-;; don't force non-evil user to require evil for one function
+;; don't force non-aiern user to require aiern for one function
 (defun alloy--delay (condition form hook &optional append local name)
   "Execute FORM when CONDITION becomes true, checking with HOOK.
 NAME specifies the name of the entry added to HOOK. If APPEND is
 non-nil, the entry is appended to the hook. If LOCAL is non-nil,
 the buffer-local value of HOOK is modified.
 
-This is `evil-delay'."
+This is `aiern-delay'."
   (declare (indent 2))
   (if (and (not (booleanp condition)) (eval condition))
       (eval form)
@@ -507,19 +508,19 @@ definition, only check in FALLBACK-PLIST."
   (or (cl-getf plist keyword1)
       (cl-getf plist keyword2)))
 
-(declare-function evil-get-minor-mode-keymap "evil-core")
-(declare-function evil-state-property "evil-common")
-(declare-function evil-get-auxiliary-keymap "evil-core")
+(declare-function aiern-get-minor-mode-keymap "aiern-core")
+(declare-function aiern-state-property "aiern-common")
+(declare-function aiern-get-auxiliary-keymap "aiern-core")
 (cl-defun alloy--get-keymap (state &optional keymap
                                      minor-mode
                                      ignore-special)
   "Transform STATE and the symbol or keymap KEYMAP into the appropriate keymap.
-If MINOR-MODE and STATE are non-nil, use `evil-get-minor-mode-keymap'. If
+If MINOR-MODE and STATE are non-nil, use `aiern-get-minor-mode-keymap'. If
 IGNORE-SPECIAL is non-nil, do not try to resolve the \"special\" keymaps 'global
 and 'local. In this case, the only thing this function will do is return the
 actually keymap if KEYMAP is a symbol besides 'global or 'local. Otherwise the
 keymap returned depends on whether STATE is specified. Note that if STATE is
-specified, evil needs to be installed and will be required.
+specified, aiern needs to be installed and will be required.
 
 STATE nil:
 'local  - Run/return `alloy-local-map'
@@ -527,26 +528,26 @@ STATE nil:
 else    - Return keymap or (symbol-value keymap)
 
 STATE non-nil:
-'local  - Return the corresponding evil local map
-'global - Return the corresponding evil global map
-else    - Return the corresponding evil auxiliary or minor mode map"
+'local  - Return the corresponding aiern local map
+'global - Return the corresponding aiern global map
+else    - Return the corresponding aiern auxiliary or minor mode map"
   (when (and (symbolp keymap)
              (not (memq keymap '(global local))))
     (setq keymap (symbol-value keymap)))
   (when ignore-special
     (cl-return-from alloy--get-keymap keymap))
   (if state
-      (if (require 'evil nil t)
+      (if (require 'aiern nil t)
           (cond ((or (null keymap)
                      (eq keymap 'global))
-                 (evil-state-property state :keymap t))
+                 (aiern-state-property state :keymap t))
                 (minor-mode
-                 (evil-get-minor-mode-keymap state keymap))
+                 (aiern-get-minor-mode-keymap state keymap))
                 ((eq keymap 'local)
-                 (evil-state-property state :local-keymap t))
+                 (aiern-state-property state :local-keymap t))
                 (t
-                 (evil-get-auxiliary-keymap keymap state t t)))
-        (error "Evil is required if state is specified"))
+                 (aiern-get-auxiliary-keymap keymap state t t)))
+        (error "aiern is required if state is specified"))
     (cl-case keymap
       (global (current-global-map))
       (local (alloy-local-map))
@@ -600,7 +601,7 @@ used globally, add it to `alloy-extended-def-global-ignore-keywords' as well.
 
 For each keyword there should be a corresponding function named
 alloy-extended-def-:<keyword> which will be passed state, keymap (the symbol
-not actual keymap), key (the internal representation, i.e. `kbd' already called
+not actual keymap), key (the internal representation, i.e. `naked' already called
 if necessary), edef (always a plist; normal definitions will automatically be
 converted), and kargs (the original `alloy-define-key' keyword argument plist;
 useful when the keyword can be used globally or has helper keywords that can be
@@ -684,7 +685,7 @@ the other hand, doesn't make sense at all globally.")
 (defun alloy-extended-def-:which-key (_state keymap key edef kargs)
   "Add a which-key description for KEY.
 If :major-modes is specified in EDEF, add the description for the corresponding
-major mode. KEY should not be in the kbd format (kbd should have already been
+major mode. KEY should not be in the naked format (naked should have already been
 run on it)."
   (alloy-with-eval-after-load 'which-key
     (let* ((wk (alloy--getf2 edef :which-key :wk))
@@ -734,31 +735,31 @@ run on it)."
 
 (defalias 'alloy-extended-def-:wk #'alloy-extended-def-:which-key)
 
-;; *** Evil Integration
-(declare-function evil-add-command-properties "evil-common")
+;; *** aiern Integration
+(declare-function aiern-add-command-properties "aiern-common")
 (defun alloy-extended-def-:properties (_state _keymap _key edef kargs)
-  "Use `evil-add-command-properties' to add properties to a command.
+  "Use `aiern-add-command-properties' to add properties to a command.
 The properties should be specified with :properties in either EDEF or KARGS."
-  (alloy-with-eval-after-load 'evil
+  (alloy-with-eval-after-load 'aiern
     (let ((properties (alloy--getf edef kargs :properties))
           (command (cl-getf edef :def)))
-      (apply #'evil-add-command-properties command properties))))
+      (apply #'aiern-add-command-properties command properties))))
 
 (defun alloy-extended-def-:repeat (_state _keymap _key edef kargs)
-  "Use `evil-add-command-properties' to set the :repeat property for a command.
+  "Use `aiern-add-command-properties' to set the :repeat property for a command.
 The repeat property should be specified with :repeat in either EDEF or KARGS."
-  (alloy-with-eval-after-load 'evil
+  (alloy-with-eval-after-load 'aiern
     (let ((repeat-property (alloy--getf edef kargs :repeat))
           (command (cl-getf edef :def)))
-      (evil-add-command-properties command :repeat repeat-property))))
+      (aiern-add-command-properties command :repeat repeat-property))))
 
 (defun alloy-extended-def-:jump (_state _keymap _key edef kargs)
-  "Use `evil-add-command-properties' to set the :jump property for a command.
+  "Use `aiern-add-command-properties' to set the :jump property for a command.
 The jump property should be specified with :jump in either EDEF or KARGS."
-  (alloy-with-eval-after-load 'evil
+  (alloy-with-eval-after-load 'aiern
     (let ((jump-property (alloy--getf edef kargs :jump))
           (command (cl-getf edef :def)))
-      (evil-add-command-properties command :jump jump-property))))
+      (aiern-add-command-properties command :jump jump-property))))
 
 ;; ** Extended Defintion Functions That Alter the Definition
 (defun alloy-extended-def-:keymap (state keymap _key edef kargs)
@@ -789,7 +790,7 @@ If the keymap already exists, it will simply be returned."
                             bind-keymap-sym package)))
                   ;; use `this-command-keys' as `key' may not be the full sequence
                   (let ((keys (this-command-keys))
-                        (alloy-implicit-kbd nil))
+                        (alloy-implicit-naked nil))
                     (alloy-define-key
                      :states state
                      :keymaps keymap
@@ -940,7 +941,7 @@ KARGS to each matched extended definition function. See
 
 (defun alloy--parse-maps (state keymap maps kargs)
   "Rewrite MAPS so that the definitions are bindable.
-This includes possibly calling `kbd' on keys and parsing extended definitions.
+This includes possibly calling `naked' on keys and parsing extended definitions.
 Turn key/binding pairs in MAPS into triples in the form of (key parsed-def
 original-def) where parsed-def is the bindable form and original-def is the
 original definition as an extended definition plist (turn normal definitions
@@ -952,17 +953,17 @@ extended definitions when necessary)."
                       (alloy--parse-def state keymap key def kargs))
              unless (eq bindable-def :ignore)
              collect key
-             and collect (if alloy-implicit-kbd
-                             (alloy--kbd bindable-def)
+             and collect (if alloy-implicit-naked
+                             (alloy--naked bindable-def)
                            bindable-def)
              and collect (alloy--normalize-extended-def def))))
 
 ;; * Helper Key Definers
-(declare-function evil-define-minor-mode-key "evil-core")
+(declare-function aiern-define-minor-mode-key "aiern-core")
 (defun alloy-minor-mode-define-key (state mode key def _orig-def _kargs)
-  "A wrapper for `evil-define-minor-mode-key'."
-  (alloy-with-eval-after-load 'evil
-    (evil-define-minor-mode-key state mode key def)))
+  "A wrapper for `aiern-define-minor-mode-key'."
+  (alloy-with-eval-after-load 'aiern
+    (aiern-define-minor-mode-key state mode key def)))
 
 (declare-function lispy-define-key "lispy")
 (defun alloy-lispy-define-key (_state keymap key def orig-def kargs)
@@ -990,7 +991,7 @@ extended definitions when necessary)."
            (key (key-description key)))
       (lpy-define-key keymap key def))))
 
-(declare-function evil-define-key* "evil-core")
+(declare-function aiern-define-key* "aiern-core")
 (defun alloy--define-key-dispatch (state keymap maps kargs)
   "In STATE (if non-nil) and KEYMAP, bind MAPS.
 MAPS is composed of triplets of (key parsed-def original-def). This function
@@ -1014,8 +1015,8 @@ non-nil if no custom definer is specified."
                ;; just to get the symbol-value of the keymap when it is not
                ;; global/local
                (setq keymap (alloy--get-keymap nil keymap nil t))
-               (alloy-with-eval-after-load 'evil
-                 (evil-define-key* state keymap key def)))
+               (alloy-with-eval-after-load 'aiern
+                 (aiern-define-key* state keymap key def)))
               (t
                (setq keymap (alloy--get-keymap nil keymap))
                (define-key keymap key def)))))))
@@ -1034,7 +1035,7 @@ with by calling `alloy--define-key-dispatch'."
     (let* ((non-normal-p (if state
                              (memq state alloy-non-normal-states)
                            (memq keymap
-                                 (mapcar #'alloy--evil-keymap-for-state
+                                 (mapcar #'alloy--aiern-keymap-for-state
                                          alloy-non-normal-states))))
            (valid-maps (list (cond ((and non-normal-maps non-normal-p)
                                     non-normal-maps)
@@ -1086,7 +1087,7 @@ Define MAPS, optionally using DEFINER, in the keymap(s) corresponding to STATES
 and KEYMAPS.
 
 MAPS consists of paired keys (vectors or strings; also see
-`alloy-implicit-kbd') and definitions (those mentioned in `define-key''s
+`alloy-implicit-naked') and definitions (those mentioned in `define-key''s
 docstring and alloy.el's \"extended\" definitions). All pairs (when not
 ignored) will be recorded and can be later displayed with
 `alloy-describe-keybindings'.
@@ -1102,12 +1103,12 @@ easily storing the keymap name for use with `alloy-describe-keybindings',
 etc.). Note that alloy.el provides other key definer macros that do not
 require quoting keymaps.
 
-STATES corresponds to the evil state(s) to bind the keys in. Non-evil users
-should not set STATES. When STATES is non-nil, `evil-define-key*' will be
-used (the evil auxiliary keymaps corresponding STATES and KEYMAPS will be used);
+STATES corresponds to the aiern state(s) to bind the keys in. Non-aiern users
+should not set STATES. When STATES is non-nil, `aiern-define-key*' will be
+used (the aiern auxiliary keymaps corresponding STATES and KEYMAPS will be used);
 otherwise `define-key' will be used (unless DEFINER is specified). KEYMAPS
 defaults to 'global. There is also 'local, which create buffer-local
-keybindings for both evil and non-evil keybindings. There are other special,
+keybindings for both aiern and non-aiern keybindings. There are other special,
 user-alterable \"shorthand\" symbols for keymaps and states (see
 `alloy-keymap-aliases' and `alloy-state-aliases').
 
@@ -1119,11 +1120,11 @@ PREFIX corresponds to a key to prefix keys in MAPS with and defaults to none. To
 bind/unbind a key specified with PREFIX, \"\" can be specified as a key in
 MAPS (e.g. ...:prefix \"SPC\" \"\" nil... will unbind space).
 
-The keywords in this paragraph are only useful for evil users. If
+The keywords in this paragraph are only useful for aiern users. If
 NON-NORMAL-PREFIX is specified, this prefix will be used instead of PREFIX for
 states in `alloy-non-normal-states' (e.g. the emacs and insert states). This
 argument will only have an effect if one of these states is in STATES or if
-corresponding global keymap (e.g. `evil-insert-state-map') is in KEYMAPS.
+corresponding global keymap (e.g. `aiern-insert-state-map') is in KEYMAPS.
 Alternatively, GLOBAL-PREFIX can be used with PREFIX and/or NON-NORMAL-PREFIX to
 bind keys in all states under the specified prefix. Like with NON-NORMAL-PREFIX,
 GLOBAL-PREFIX will prevent PREFIX from applying to `alloy-non-normal-states'.
@@ -1163,7 +1164,7 @@ PACKAGE is the global version of the extended definition keyword that specifies
 the package a keymap is defined in (used for \"autoloading\" keymaps)
 
 PROPERTIES, REPEAT, and JUMP are the global versions of the extended definition
-keywords used for adding evil command properties to commands.
+keywords used for adding aiern command properties to commands.
 
 MAJOR-MODES, WK-MATCH-KEYS, WK-MATCH-BINDINGS, and WK-FULL-KEYS are the
 corresponding global versions of which-key extended definition keywords. They
@@ -1219,20 +1220,20 @@ keywords that are used for each corresponding custom DEFINER."
     ;; TODO reduce code duplication here
     (when non-normal-prefix
       (setq non-normal-prefix-maps
-            (alloy--apply-prefix-and-kbd
+            (alloy--apply-prefix-and-naked
              (alloy--concat t non-normal-prefix infix)
              (append (when (and prefix prefix-def)
                        (list "" prefix-def))
                      maps))))
     (when global-prefix
       (setq global-prefix-maps
-            (alloy--apply-prefix-and-kbd
+            (alloy--apply-prefix-and-naked
              (alloy--concat t global-prefix infix)
              (append (when (and prefix prefix-def)
                        (list "" prefix-def))
                      maps))))
     ;; last so not applying prefix twice
-    (setq maps (alloy--apply-prefix-and-kbd
+    (setq maps (alloy--apply-prefix-and-naked
                 (alloy--concat t prefix infix)
                 (append (when (and prefix prefix-def)
                           (list "" prefix-def))
@@ -1242,9 +1243,9 @@ keywords that are used for each corresponding custom DEFINER."
         (alloy--delay `(or (boundp ',keymap)
                              (and (memq ',keymap '(local global))
                                   (if ',state
-                                      ;; this is `evil-state-p'
-                                      (and (boundp 'evil-state-properties)
-                                           (assq ',state evil-state-properties))
+                                      ;; this is `aiern-state-p'
+                                      (and (boundp 'aiern-state-properties)
+                                           (assq ',state aiern-state-properties))
                                     t)))
             `(alloy--define-key ',state
                                   ',keymap
@@ -1273,13 +1274,13 @@ basically act as a drop-in replacement for `define-key', and unlike with
     ,@args))
 
 ;;;###autoload
-(defmacro alloy-evil-define-key (states keymaps &rest args)
-  "A wrapper for `alloy-define-key' that is similar to `evil-define-key'.
+(defmacro alloy-aiern-define-key (states keymaps &rest args)
+  "A wrapper for `alloy-define-key' that is similar to `aiern-define-key'.
 It has positional arguments for STATES and KEYMAPS (that will not be overridden
 by a later :keymaps or :states argument). Besides this, it acts the same as
 `alloy-define-key', and ARGS can contain keyword arguments in addition to
 keybindings. This can basically act as a drop-in replacement for
-`evil-define-key', and unlike with `alloy-define-key', KEYMAPS does not need
+`aiern-define-key', and unlike with `alloy-define-key', KEYMAPS does not need
 to be quoted."
   (declare (indent 2))
   `(alloy-define-key
@@ -1304,7 +1305,7 @@ Keyword arguments and strings/vectors are not considered positional arguments."
 (defmacro alloy-def (&rest args)
   "Alloy definer that takes a variable number of positional arguments in ARGS.
 This macro will act as `alloy-define-key', `alloy-emacs-define-key', or
-`alloy-evil-define-key' based on how many of the initial arguments do not
+`alloy-aiern-define-key' based on how many of the initial arguments do not
 correspond to keybindings. All quoted and non-quoted lists and symbols before
 the first string, vector, or keyword are considered to be positional arguments.
 This means that you cannot use a function or variable for a key that starts
@@ -1322,13 +1323,13 @@ the positional arguments from the maps with a bogus keyword pair like
       (1
        `(alloy-emacs-define-key ,@args))
       (2
-       `(alloy-evil-define-key ,@args)))))
+       `(alloy-aiern-define-key ,@args)))))
 
 ;;;###autoload
 (cl-defmacro alloy-create-definer (name &rest defaults &key wrapping
                                           &allow-other-keys)
   "A helper macro to create wrappers for `alloy-def'.
-This can be used to create key definers that will use a certain keymap, evil
+This can be used to create key definers that will use a certain keymap, aiern
 state, prefix key, etc. by default. NAME is the wrapper name and DEFAULTS are
 the default arguments. WRAPPING can also be optionally specified to use a
 different definer than `alloy-def'. It should not be quoted."
@@ -1455,7 +1456,7 @@ considered the \"smallest\"."
   "Sort LIST by comparing the cadr of each element with `alloy--<'."
   (cl-sort list #'alloy--< :key #'cadr))
 
-(defvar alloy-describe-evil-states
+(defvar alloy-describe-aiern-states
   '(nil
     insert
     emacs
@@ -1465,14 +1466,14 @@ considered the \"smallest\"."
     motion
     operator
     replace)
-  "Ordered list of evil states used for `alloy--evil-state-<'.")
+  "Ordered list of aiern states used for `alloy--aiern-state-<'.")
 
-(defun alloy--evil-state-< (x y)
-  "Return t if evil state X should come before state Y.
+(defun alloy--aiern-state-< (x y)
+  "Return t if aiern state X should come before state Y.
 If X and Y are conses, the first element will be compared. Ordering is based on
-`alloy-describe-evil-states' or the symbol names for states not in the list."
-  (let ((xind (cl-position x alloy-describe-evil-states))
-        (yind (cl-position y alloy-describe-evil-states)))
+`alloy-describe-aiern-states' or the symbol names for states not in the list."
+  (let ((xind (cl-position x alloy-describe-aiern-states))
+        (yind (cl-position y alloy-describe-aiern-states)))
     (cond ((and (null xind)
                 (null yind))
            (alloy--< x y))
@@ -1483,9 +1484,9 @@ If X and Y are conses, the first element will be compared. Ordering is based on
           (t
            (< xind yind)))))
 
-(defun alloy--sort-evil-state-conses (state-conses)
-  "Sort STATE-CONSES using `alloy--evil-state-<'."
-  (cl-sort state-conses #'alloy--evil-state-< :key #'car))
+(defun alloy--sort-aiern-state-conses (state-conses)
+  "Sort STATE-CONSES using `alloy--aiern-state-<'."
+  (cl-sort state-conses #'alloy--aiern-state-< :key #'car))
 
 (defun alloy--print-map (map)
   "Print the keybinding MAP."
@@ -1579,7 +1580,7 @@ If REMAP is specified as nil (it is true by default), this is the same as
 `call-interactively'. FUNCTION, RECORD-FLAG, and KEYS are passed to
 `call-interactively'."
   (when remap
-    (setq function (or (key-binding (kbd (format "<remap> <%s>" function)))
+    (setq function (or (key-binding (naked (format "<remap> <%s>" function)))
                        function)))
   (call-interactively function record-flag keys))
 
@@ -1595,33 +1596,33 @@ If REMAP is specified as nil (it is true by default), this is the same as
 ;; TODO
 ;; - rename keys arguments to key for consistency with builtin functions
 
-(declare-function evil-change-state "evil-core")
-(defvar evil-no-display)
-(defvar evil-state)
-(defvar evil-previous-state)
-(defvar evil-previous-state-alist)
-(defvar evil-next-state)
+(declare-function aiern-change-state "aiern-core")
+(defvar aiern-no-display)
+(defvar aiern-state)
+(defvar aiern-previous-state)
+(defvar aiern-previous-state-alist)
+(defvar aiern-next-state)
 (defmacro alloy--save-state (&rest body)
   "Save the current state; execute BODY; restore the state.
-This is a combination of `evil-without-display' and `evil-save-state'. It is
+This is a combination of `aiern-without-display' and `aiern-save-state'. It is
 necessary to define this directly in alloy so that it is available when
-alloy is compiled (as evil is an optional dependency and may not be installed
+alloy is compiled (as aiern is an optional dependency and may not be installed
 when alloy is compiled)."
   (declare (indent defun)
            (debug t))
-  `(let* ((evil-no-display t)
-          (evil-state evil-state)
-          (evil-previous-state evil-previous-state)
-          (evil-previous-state-alist (copy-tree evil-previous-state-alist))
-          (evil-next-state evil-next-state)
-          (old-state evil-state)
+  `(let* ((aiern-no-display t)
+          (aiern-state aiern-state)
+          (aiern-previous-state aiern-previous-state)
+          (aiern-previous-state-alist (copy-tree aiern-previous-state-alist))
+          (aiern-next-state aiern-next-state)
+          (old-state aiern-state)
           (inhibit-quit t)
           (buf (current-buffer)))
      (unwind-protect
          (progn ,@body)
        (when (buffer-live-p buf)
          (with-current-buffer buf
-           (evil-change-state old-state))))))
+           (aiern-change-state old-state))))))
 
 ;;;###autoload
 (cl-defmacro alloy-key (key &key
@@ -1639,9 +1640,9 @@ definition. It is recommended over `alloy-simulate-key' wherever possible. See
 the docstring of `alloy-simulate-key' and the readme for information about the
 benefits and downsides of `alloy-key'.
 
-KEY should be a string given in `kbd' notation and should correspond to a single
+KEY should be a string given in `naked' notation and should correspond to a single
 definition (as opposed to a sequence of commands). When STATE is specified, look
-up KEY with STATE as the current evil state. When specified, DOCSTRING will be
+up KEY with STATE as the current aiern state. When specified, DOCSTRING will be
 the menu item's name/description.
 
 Let can be used to bind variables around key lookup. For example:
@@ -1651,8 +1652,8 @@ Let can be used to bind variables around key lookup. For example:
 SETUP and TEARDOWN can be used to run certain functions before and after key
 lookup. For example, something similar to using :state 'emacs would be:
 (alloy-key \"some key\"
-  :setup (evil-local-mode -1)
-  :teardown (evil-local-mode))
+  :setup (aiern-local-mode -1)
+  :teardown (aiern-local-mode))
 
 ACCEPT-DEFAULT, NO-REMAP, and POSITION are passed to `key-binding'."
   (declare (indent 1))
@@ -1666,10 +1667,10 @@ ACCEPT-DEFAULT, NO-REMAP, and POSITION are passed to `key-binding'."
          (prog1
              ,(if state
                   `(alloy--save-state
-                     (evil-change-state ,state)
-                     (key-binding (alloy--kbd ,key) ,accept-default ,no-remap
+                     (aiern-change-state ,state)
+                     (key-binding (alloy--naked ,key) ,accept-default ,no-remap
                                   ,position))
-                `(key-binding (alloy--kbd ,key) ,accept-default ,no-remap
+                `(key-binding (alloy--naked ,key) ,accept-default ,no-remap
                               ,position))
            ,teardown)))))
 
@@ -1693,7 +1694,7 @@ starting with the full KEYS and ending when a match is found or no subsequences
 remain. Unlike `lookup-key' if KEYS is not matched, fall back to checking with
 `key-binding'. If STATE is specified and KEYMAP is not, temporarily switch to
 STATE to look up the keys (this means that keybindings inherited from a
-different evil state can still be detected). Return a list of the match and the
+different aiern state can still be detected). Return a list of the match and the
 leftover keys (or nil if the full KEYS was matched)."
   (let* ((keymap (when keymap
                    (alloy--get-keymap state keymap)))
@@ -1706,9 +1707,9 @@ leftover keys (or nil if the full KEYS was matched)."
                             (or (lookup-key keymap key)
                                 (key-binding key)))
                            (state
-                            ;; this also works fine when evil-local-mode is off
+                            ;; this also works fine when aiern-local-mode is off
                             (alloy--save-state
-                              (evil-change-state state)
+                              (aiern-change-state state)
                               (key-binding key)))
                            (t
                             (key-binding key)))))
@@ -1721,18 +1722,18 @@ leftover keys (or nil if the full KEYS was matched)."
               nil
             (substring keys ind len)))))
 
-(declare-function evil-echo "evil-common")
-(declare-function evil-visual-state-p "evil-common" t t)
-(declare-function evil-emacs-state "evil-states" t t)
-(defvar evil-move-cursor-back)
+(declare-function aiern-echo "aiern-common")
+(declare-function aiern-visual-state-p "aiern-common" t t)
+(declare-function aiern-emacs-state "aiern-states" t t)
+(defvar aiern-move-cursor-back)
 (defun alloy--execute-in-state (state &optional delay-revert)
   "Execute the next command in STATE.
-This is an altered version of `evil-execute-in-normal-state' and
-`evil-execute-in-emacs-state'. When calling this in a command, specify
+This is an altered version of `aiern-execute-in-normal-state' and
+`aiern-execute-in-emacs-state'. When calling this in a command, specify
 DELAY-REVERT as non-nil to prevent switching the state back until after
 `this-command' is finished."
   (interactive)
-  (let ((ignore-commands '(evil-use-register
+  (let ((ignore-commands '(aiern-use-register
                            digit-argument
                            negative-argument
                            universal-argument
@@ -1744,18 +1745,18 @@ DELAY-REVERT as non-nil to prevent switching the state back until after
     (alloy--delay `(not (memq this-command ',ignore-commands))
         `(progn
            (with-current-buffer ,(current-buffer)
-             (evil-change-state ',evil-state)
-             (setq evil-move-cursor-back ',evil-move-cursor-back)))
+             (aiern-change-state ',aiern-state)
+             (setq aiern-move-cursor-back ',aiern-move-cursor-back)))
       'post-command-hook))
   (if (and (eq state 'emacs)
-           (evil-visual-state-p))
+           (aiern-visual-state-p))
       (let ((mrk (mark))
             (pnt (point)))
-        (evil-emacs-state)
+        (aiern-emacs-state)
         (set-mark mrk)
         (goto-char pnt))
-    (setq evil-move-cursor-back nil)
-    (evil-change-state state)))
+    (setq aiern-move-cursor-back nil)
+    (aiern-change-state state)))
 
 (cl-defun alloy--simulate-keys (command keys &optional state keymap
                                           (lookup t)
@@ -1763,7 +1764,7 @@ DELAY-REVERT as non-nil to prevent switching the state back until after
   "Simulate COMMAND followed by KEYS in STATE and/or KEYMAP.
 If COMMAND is nil, just simulate KEYS. If STATE and KEYMAP are nil, simulate
 KEYS in the current context. When COMMAND is non-nil, STATE and KEYMAP will have
-no effect. KEYS should be a string that can be passed to `kbd' or nil. If KEYS
+no effect. KEYS should be a string that can be passed to `naked' or nil. If KEYS
 is nil, the COMMAND will just be called interactively. If COMMAND is nil and
 LOOKUP is non-nil, KEYS will be looked up in the correct context to determine if
 any subsequence corresponds to a command or keymap. If a command is matched,
@@ -1773,7 +1774,7 @@ as nil. When COMMAND has been remapped (i.e. [remap COMMAND] is currently
 bound), the remapped version will be used instead of the original command unless
 REMAP is specified as nil (it is true by default)."
   (let* ((keys (when keys
-                 (alloy--kbd keys)))
+                 (alloy--naked keys)))
          ;; TODO remove when get rid of `alloy-simulate-keys'
          (state (if (eq state t)
                     'emacs
@@ -1793,7 +1794,7 @@ REMAP is specified as nil (it is true by default)."
           (alloy--execute-in-state state t)))
       (when (or alloy--simulate-as-is
                 alloy--simulate-next-as-is
-                (not executing-kbd-macro))
+                (not executing-naked-macro))
         (setq alloy--simulate-next-as-is nil)
         ;; keys are incorrectly saved as this-command-keys when recording macros
         ;; these keys will be played back, so don't simulate them
@@ -1801,7 +1802,7 @@ REMAP is specified as nil (it is true by default)."
               (nconc
                ;; force keys to be added to this-command-keys
                ;; this happens normally already for macros but it needs to be
-               ;; forced for evil-repeat though, which will only include the
+               ;; forced for aiern-repeat though, which will only include the
                ;; first key otherwise (ideally no keys would ever be added in
                ;; either case)
                (mapcar (lambda (ev) (cons t ev))
@@ -1842,8 +1843,8 @@ REMAP is specified as nil (it is true by default)."
                               (concat "-in-"
                                       (symbol-name keymap))))))))
     `(progn
-       (eval-after-load 'evil
-         '(evil-set-command-property #',name :repeat 'alloy--simulate-repeat))
+       (eval-after-load 'aiern
+         '(aiern-set-command-property #',name :repeat 'alloy--simulate-repeat))
        (defun ,name
            ()
          ,(or docstring
@@ -1890,10 +1891,10 @@ to be simulated ; see the readme for more information). The main downsides of
 subsequent commands, and which-key does not currently work well with it when
 simulating a prefix key/incomplete key sequence.
 
-KEYS should be a string given in `kbd' notation. It can also be a list of a
+KEYS should be a string given in `naked' notation. It can also be a list of a
 single command followed by a string of the key(s) to simulate after calling that
-command. STATE should only be specified by evil users and should be a quoted
-evil state. KEYMAP should not be quoted. Both STATE and KEYMAP aliases are
+command. STATE should only be specified by aiern users and should be a quoted
+aiern state. KEYMAP should not be quoted. Both STATE and KEYMAP aliases are
 supported (but they have to be set when the macro is expanded). When neither
 STATE or KEYMAP are specified, the key(s) will be simulated in the current
 context.
@@ -1905,7 +1906,7 @@ automatically generated docstring.
 Normally the generated function will look up KEY in the correct context to try
 to match a command. To prevent this lookup, LOOKUP can be specified as nil.
 Generally, you will want to keep LOOKUP non-nil because this will allow checking
-the evil repeat property of matched commands to determine whether or not they
+the aiern repeat property of matched commands to determine whether or not they
 should be recorded. See the docstring for `alloy--simulate-keys' for more
 information about LOOKUP.
 
@@ -1946,8 +1947,8 @@ The advantages of this over a keyboard macro are as follows:
                               (concat "-in-"
                                       (symbol-name keymap))))))))
     `(progn
-       (eval-after-load 'evil
-         '(evil-set-command-property #',name :repeat 'alloy--simulate-repeat))
+       (eval-after-load 'aiern
+         '(aiern-set-command-property #',name :repeat 'alloy--simulate-repeat))
        (when ,which-key
          (alloy-with-eval-after-load 'which-key
            (push '((nil . ,(symbol-name name))
@@ -1985,30 +1986,30 @@ The advantages of this over a keyboard macro are as follows:
   "Return t if repeat recording should be aborted based on REPEAT-PROP."
   (or (memq repeat-prop (list nil 'abort 'ignore))
       (and (eq repeat-prop 'motion)
-           (not (memq evil-state '(insert replace))))))
+           (not (memq aiern-state '(insert replace))))))
 
-(declare-function evil-repeat-record "evil-repeat")
-(declare-function evil-get-command-property "evil-common")
-(declare-function evil-repeat-abort "evil-repeat")
-(declare-function evil-this-command-keys "evil-repeat")
-(declare-function evil-clear-command-keys "evil-repeat")
-(defvar evil-this-register)
+(declare-function aiern-repeat-record "aiern-repeat")
+(declare-function aiern-get-command-property "aiern-common")
+(declare-function aiern-repeat-abort "aiern-repeat")
+(declare-function aiern-this-command-keys "aiern-repeat")
+(declare-function aiern-clear-command-keys "aiern-repeat")
+(defvar aiern-this-register)
 (defun alloy--simulate-repeat (flag)
-  "Modified version of `evil-repeat-keystrokes'.
+  "Modified version of `aiern-repeat-keystrokes'.
 It behaves as normal but will check the repeat property of a simulated command
 to determine whether to abort recording."
   (cond ((eq flag 'pre)
-         (when evil-this-register
-           (evil-repeat-record
-            `(set evil-this-register ,evil-this-register))))
+         (when aiern-this-register
+           (aiern-repeat-record
+            `(set aiern-this-register ,aiern-this-register))))
         ((eq flag 'post)
          (let* ((command alloy--last-simulated-command)
-                (repeat-prop (evil-get-command-property command :repeat t)))
+                (repeat-prop (aiern-get-command-property command :repeat t)))
            (if (and command (alloy--repeat-abort-p repeat-prop))
-               (evil-repeat-abort)
-             (evil-repeat-record
-              (evil-this-command-keys t))
-             (evil-clear-command-keys))))))
+               (aiern-repeat-abort)
+             (aiern-repeat-record
+              (aiern-this-command-keys t))
+             (aiern-clear-command-keys))))))
 
 ;; ** Key Dispatch
 (defvar alloy--last-dispatch-command nil
@@ -2016,7 +2017,7 @@ to determine whether to abort recording."
 
 (defun alloy--extend-key-sequence (keys)
   "Read a key and append it to KEYS.
-KEYS should be a string given in `kbd' notation."
+KEYS should be a string given in `naked' notation."
   (let ((key (read-event)))
     (concat keys
             (when keys
@@ -2042,8 +2043,8 @@ the unmatched keys. So, for example, if \"ab\" was pressed, and \"ab\" is not
 one of the key sequences from MAPS, the FALLBACK-COMMAND will be run followed by
 the simulated keypresses of \"ab\". Prefix arguments will still work regardless
 of which command is run. This is useful for binding under non-prefix keys. For
-example, this can be used to redefine a sequence like \"cw\" or \"cow\" in evil
-but still have \"c\" work as `evil-change'. If TIMEOUT is specified,
+example, this can be used to redefine a sequence like \"cw\" or \"cow\" in aiern
+but still have \"c\" work as `aiern-change'. If TIMEOUT is specified,
 FALLBACK-COMMAND will also be run in the case that the user does not press the
 next key within the TIMEOUT (e.g. 0.5).
 
@@ -2069,8 +2070,8 @@ REMAP is specified as nil (it is true by default)."
         ;; remove keyword arguments from maps
         (maps (car (alloy--remove-keyword-args maps))))
     `(progn
-       (eval-after-load 'evil
-         '(evil-set-command-property #',name :repeat 'alloy--dispatch-repeat))
+       (eval-after-load 'aiern
+         '(aiern-set-command-property #',name :repeat 'alloy--dispatch-repeat))
        (when ,which-key
          (alloy-with-eval-after-load 'which-key
            (push '((nil . ,(symbol-name name))
@@ -2094,7 +2095,7 @@ REMAP is specified as nil (it is true by default)."
            (when inherit-keymap
              (set-keymap-parent map inherit-keymap))
            (while maps
-             (define-key map (alloy--kbd (pop maps)) (pop maps)))
+             (define-key map (alloy--naked (pop maps)) (pop maps)))
            (while (progn
                     (if timeout
                         (with-timeout (timeout (setq timed-out-p t))
@@ -2102,12 +2103,12 @@ REMAP is specified as nil (it is true by default)."
                           (setq char (alloy--extend-key-sequence char)))
                       (setq char (alloy--extend-key-sequence char)))
                     (and (not timed-out-p)
-                         (keymapp (lookup-key map (kbd char))))))
+                         (keymapp (lookup-key map (naked char))))))
            (cond
             ((and (not timed-out-p)
-                  (setq matched-command (lookup-key map (kbd char))))
-             ;; necessary for evil-this-operator checks because
-             ;; evil-define-operator sets evil-this-operator to this-command
+                  (setq matched-command (lookup-key map (naked char))))
+             ;; necessary for aiern-this-operator checks because
+             ;; aiern-define-operator sets aiern-this-operator to this-command
              (let ((this-command matched-command))
                (alloy--call-interactively matched-command ,remap)))
             (t
@@ -2118,21 +2119,21 @@ REMAP is specified as nil (it is true by default)."
        #',name)))
 
 (defun alloy--dispatch-repeat (flag)
-  "Modified version of `evil-repeat-keystrokes'.
+  "Modified version of `aiern-repeat-keystrokes'.
 It behaves as normal but will check the repeat property of a simulated command
 to determine whether to abort recording."
   (cond ((eq flag 'pre)
-         (when evil-this-register
-           (evil-repeat-record
-            `(set evil-this-register ,evil-this-register))))
+         (when aiern-this-register
+           (aiern-repeat-record
+            `(set aiern-this-register ,aiern-this-register))))
         ((eq flag 'post)
-         (let ((repeat-prop (evil-get-command-property
+         (let ((repeat-prop (aiern-get-command-property
                              alloy--last-dispatch-command
                              :repeat t)))
            (if (alloy--repeat-abort-p repeat-prop)
-               (evil-repeat-abort)
-             (evil-repeat-record (evil-this-command-keys t))
-             (evil-clear-command-keys))))))
+               (aiern-repeat-abort)
+             (aiern-repeat-record (aiern-this-command-keys t))
+             (aiern-clear-command-keys))))))
 
 ;; ** Predicate Dispatch
 ;;;###autoload
@@ -2167,7 +2168,7 @@ can be specified as a description for the menu item."
                                         &key destructive
                                         &allow-other-keys)
   "Translate keys in the keymap(s) corresponding to STATES and KEYMAPS.
-STATES should be the name of an evil state, a list of states, or nil. KEYMAPS
+STATES should be the name of an aiern state, a list of states, or nil. KEYMAPS
 should be a symbol corresponding to the keymap to make the translations in or a
 list of keymap names. Keymap and state aliases are supported (as well as 'local
 and 'global for KEYMAPS).
@@ -2205,11 +2206,11 @@ If both MAPS and DESCTRUCTIVE are nil, only create the backup keymap."
              (maps (cl-loop for (key replacement) on maps by 'cddr
                             ;; :destructive can be in MAPS
                             unless (keywordp key)
-                            collect (alloy--kbd key)
+                            collect (alloy--naked key)
                             and collect (if replacement
                                             (lookup-key
                                              lookup-keymap
-                                             (alloy--kbd replacement))
+                                             (alloy--naked replacement))
                                           ;; unbind
                                           nil))))
         (unless (or destructive
@@ -2490,9 +2491,9 @@ If after emacs initialization already, run BODY now."
 ;; * Optional Setup
 
 ;;;###autoload
-(defun alloy-evil-setup (&optional short-names _)
+(defun alloy-aiern-setup (&optional short-names _)
   "Set up some basic equivalents for vim mapping functions.
-This creates global key definition functions for the evil states.
+This creates global key definition functions for the aiern states.
 Specifying SHORT-NAMES as non-nil will create non-prefixed function
 aliases such as `nmap' for `alloy-nmap'."
   (alloy-create-definer alloy-imap :states 'insert)
@@ -2505,11 +2506,11 @@ aliases such as `nmap' for `alloy-nmap'."
   (alloy-create-definer alloy-iemap :states '(insert emacs))
   (alloy-create-definer alloy-nvmap :states '(normal visual))
   ;; these two don't have corresponding states
-  (alloy-create-definer alloy-itomap :keymaps 'evil-inner-text-objects-map)
-  (alloy-create-definer alloy-otomap :keymaps 'evil-outer-text-objects-map)
+  (alloy-create-definer alloy-itomap :keymaps 'aiern-inner-text-objects-map)
+  (alloy-create-definer alloy-otomap :keymaps 'aiern-outer-text-objects-map)
   (alloy-create-definer alloy-tomap
-    :keymaps '(evil-outer-text-objects-map
-               evil-inner-text-objects-map))
+    :keymaps '(aiern-outer-text-objects-map
+               aiern-inner-text-objects-map))
   (when short-names
     (defalias 'imap #'alloy-imap)
     (defalias 'emap #'alloy-emap)
@@ -2545,6 +2546,12 @@ return nil."
               (symbolp (cdr def)))
          (cdr def))))
 
+(defvar demon-run '(override
+  aiern-insert-state-map
+  aiern-normal-state-map
+  aiern-insert-state-map
+  aiern-normal-state-map))
+
 (alloy-with-eval-after-load 'use-package-core
   (declare-function use-package-concat "use-package-core")
   (declare-function use-package-process-keywords "use-package-core")
@@ -2571,12 +2578,9 @@ return nil."
      (use-package-process-keywords name rest state)
      `(,@(mapcar (lambda (arglist)
                    arglist
-                   `(alloy-def :keymaps '(override
-      aiern-insert-state-map
-      aiern-normal-state-map
-      evil-insert-state-map
-      evil-normal-state-map) ,@arglist))
+                   `(alloy-def :keymaps demon-run ,@arglist))
                  arglists))))
+
   (defalias 'use-package-autoloads/:demon #'use-package-autoloads/:ghook)
   (defalias 'use-package-normalize/:demon #'use-package-normalize/:ghook)
 
