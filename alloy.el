@@ -95,6 +95,7 @@ just use `alloy-default-prefix'/:prefix by itself."
           (const :tag "Insert state" insert)
           (const :tag "Emacs state" emacs)
           (const :tag "Normal state" normal)
+          (const :tag "God state" god)
           (const :tag "Visual state" visual)
           (const :tag "Motion state" motion)
           (const :tag "Operator state" operator)
@@ -169,6 +170,7 @@ This is an alist of a state to keybindings.")
     ((e emacs) . aiern-emacs-state-map)
     ((h hybrid) . aiern-hybrid-state-map)
     ((n normal) . aiern-normal-state-map)
+    ((g god) . aiern-god-state-map)
     ((v visual) . aiern-visual-state-map)
     ((m motion) . aiern-motion-state-map)
     ((o operator) . aiern-operator-state-map)
@@ -185,6 +187,7 @@ Earlier entries have higher precedence."
     (e . emacs)
     (h . hybrid)
     (n . normal)
+    (g . god)
     (v . visual)
     (m . motion)
     (o . operator)
@@ -219,6 +222,7 @@ Earlier entries have higher precedence."
     aiern-emacs-state-map
     aiern-hybrid-state-map
     aiern-normal-state-map
+    aiern-god-state-map
     aiern-visual-state-map
     aiern-motion-state-map
     aiern-operator-state-map
@@ -306,6 +310,7 @@ precedence over keys bound in other aiern auxiliary maps."
     emacs
     hybrid
     normal
+    god
     visual
     motion
     operator
@@ -1462,6 +1467,7 @@ considered the \"smallest\"."
     emacs
     hybrid
     normal
+    god
     visual
     motion
     operator
@@ -2499,12 +2505,13 @@ aliases such as `nmap' for `alloy-nmap'."
   (alloy-create-definer alloy-imap :states 'insert)
   (alloy-create-definer alloy-emap :states 'emacs)
   (alloy-create-definer alloy-nmap :states 'normal)
+  (alloy-create-definer alloy-gmap :states 'god)
   (alloy-create-definer alloy-vmap :states 'visual)
   (alloy-create-definer alloy-mmap :states 'motion)
   (alloy-create-definer alloy-omap :states 'operator)
   (alloy-create-definer alloy-rmap :states 'replace)
   (alloy-create-definer alloy-iemap :states '(insert emacs))
-  (alloy-create-definer alloy-nvmap :states '(normal visual))
+  (alloy-create-definer alloy-ngvmap :states '(normal god visual))
   ;; these two don't have corresponding states
   (alloy-create-definer alloy-itomap :keymaps 'aiern-inner-text-objects-map)
   (alloy-create-definer alloy-otomap :keymaps 'aiern-outer-text-objects-map)
@@ -2549,8 +2556,10 @@ return nil."
 (defvar demon-run '(override
   aiern-insert-state-map
   aiern-normal-state-map
-  aiern-insert-state-map
-  aiern-normal-state-map))
+  aiern-god-state-map
+  evil-insert-state-map
+  evil-normal-state-map
+  evil-god-state-map))
 
 (alloy-with-eval-after-load 'use-package-core
   (declare-function use-package-concat "use-package-core")
