@@ -2581,28 +2581,37 @@ return nil."
                  unless (memq item '(:alloy :demon :modalka))
                  collect item))
 
-  (defun use-package-handler/:demon (name _keyword arglists rest state)
+  (defun use-package-handler/:demon (name _keyword args rest state)
     "Use-package handler for :demon."
     (use-package-concat
      (use-package-process-keywords name rest state)
      `(,@(mapcar (lambda (arglist)
-                   arglist
-                   `(alloy-def :keymaps demon-run ,@arglist))
-                 arglists))))
+                   ;; Note: prefix commands are not valid functions
+                   (if (or (functionp (car arglist))
+                           (macrop (car arglist)))
+                       `(,@arglist :package ',name)
+                     `(alloy-def ,@'(:keymaps demon-run)
+                        ,@arglist
+                        :package ',name)))
+                 (plist-get args :arglists)))))
+  (defalias 'use-package-normalize/:demon 'use-package-normalize/:alloy)
+  (defalias 'use-package-autoloads/:demon 'use-package-autoloads/:alloy)
 
-  (defalias 'use-package-autoloads/:demon #'use-package-autoloads/:ghook)
-  (defalias 'use-package-normalize/:demon #'use-package-normalize/:ghook)
-
-  (defun use-package-handler/:modalka (name _keyword arglists rest state)
+  (defun use-package-handler/:modalka (name _keyword args rest state)
     "Use-package handler for :modalka."
     (use-package-concat
      (use-package-process-keywords name rest state)
      `(,@(mapcar (lambda (arglist)
-                   arglist
-                   `(alloy-def :keymaps 'modalka ,@arglist))
-                 arglists))))
-  (defalias 'use-package-autoloads/:modalka #'use-package-autoloads/:ghook)
-  (defalias 'use-package-normalize/:modalka #'use-package-normalize/:ghook)
+                   ;; Note: prefix commands are not valid functions
+                   (if (or (functionp (car arglist))
+                           (macrop (car arglist)))
+                       `(,@arglist :package ',name)
+                     `(alloy-def ,@'(:keymaps 'modalka-mode-map)
+                        ,@arglist
+                        :package ',name)))
+                 (plist-get args :arglists)))))
+  (defalias 'use-package-normalize/:modalka 'use-package-normalize/:alloy)
+  (defalias 'use-package-autoloads/:modalka 'use-package-autoloads/:alloy)
 
   (defun alloy--sanitize-arglist (arglist)
     "Remove positional/separator arguments from ARGLIST."
