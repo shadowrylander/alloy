@@ -2553,7 +2553,7 @@ return nil."
               (symbolp (cdr def)))
          (cdr def))))
 
-(defvar demon-run '(override
+(defvar demon-run '(global override
   aiern-insert-state-map
   aiern-normal-state-map
   aiern-god-state-map
