@@ -1,5 +1,5 @@
 #+TITLE: General User Manual
-#+AUTHOR: Fox Kiester
+#+AUTHOR: Fox Kiester, Jeet Ray
 #+LANGUAGE: en
 #+TEXINFO_DIR_CATEGORY: Emacs
 #+TEXINFO_DIR_TITLE: General: (alloy).
@@ -13,7 +13,7 @@
 
 [[https://github.com/noctuid/alloy.el][file:http://i.imgur.com/SXA66y7.png]]
 #+BEGIN_QUOTE
-A alloy is a leader. -- onioncheese
+An alloy is a leader. -- onioncheese
 #+END_QUOTE
 
 * Recent Breaking Changes                                          :noexport:
