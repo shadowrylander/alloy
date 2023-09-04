@@ -1,0 +1,4 @@
+dirs:
+  - ../../../bundle
+export:
+  enable: false
