@@ -33,7 +33,7 @@
     "alloy.el provides a more convenient method for binding keys in emacs (for both evil and non-evil users).";
   inputs = rec {
     bundle = {
-      url = "git+https://github.com/sylvorg/bundle.git";
+      url = "https://github.com/sylvorg/bundle.git";
       type = "git";
       submodules = true;
     };
